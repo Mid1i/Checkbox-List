@@ -21,6 +21,38 @@ export const ITEMS: TypeItem[] = [
 				id: 3,
 				label: "Груша",
 				checked: false
+			},
+			{
+				id: 4,
+				label: "Апельсин",
+				checked: false
+			}
+		]
+	},
+	{
+		id: 2,
+		label: "Все овощи",
+		checked: false,
+		children: [
+			{
+				id: 1,
+				label: "Морковь",
+				checked: false
+			},
+			{
+				id: 2,
+				label: "Огурец",
+				checked: false
+			},
+			{
+				id: 3,
+				label: "Тыква",
+				checked: false
+			},
+			{
+				id: 4,
+				label: "Кабачок",
+				checked: false
 			}
 		]
 	}
