@@ -1,49 +1,142 @@
 <script setup lang="ts">
-	import { ref, watch } from "vue";
+	import { ref, computed, watch } from "vue";
 	import type { TypeItem } from "@/types/Item";
-	import CheckboxGroupItem from "@/components/CheckboxGroupItem.vue";
+	import { generateChildId } from "@/helpers/id";
 
 
-	const { items } = defineProps<{
-		title: string;
-		items: TypeItem[];
+	const { item } = defineProps<{ 
+		focusedId: string;
+		tabindex: number;
+		item: TypeItem; 
+		id: string;
 	}>();
 
+	const emit = defineEmits<{
+		handleKeydown: [event: KeyboardEvent, item: TypeItem];
+		toggleCheckbox: [item: TypeItem];
+		setInputRef: [el: HTMLElement];
+	}>();
 
-	const currentItems = ref<TypeItem[]>(items);
-
-	const isAllChecked = (parent: TypeItem): boolean => !!parent.children?.every(item => item.checked);
-
-	const isSomeChecked = (parent: TypeItem): boolean => !!parent.children?.some(item => item.checked);
-
-	const toggleCheckbox = (item: TypeItem): void => {
-		item.checked = !item.checked;
-		item.children && item.children.forEach(child => child.checked = item.checked);
-	};
-
-	const updateParentState = (parent: TypeItem): void => {
-		parent.indeterminate = !isAllChecked(parent) && isSomeChecked(parent);
-		parent.checked = isAllChecked(parent);
-	};
+	const inputRef = ref<HTMLElement | null>(null);
+	
+	const controlledId = computed<string | undefined>(() => item.children?.reduce((acc, child) => `${acc} ${generateChildId(item.id, child.id)}`, ''));
 
 
-	watch(currentItems, () => currentItems.value.forEach(updateParentState), { deep: true });
+	watch(inputRef, () => inputRef.value && emit("setInputRef", inputRef.value));
 </script>
 
 
 <template>
-	<div class="container">
-		<fieldset class="checkbox-group">
-			<legend class="checkbox-group__title">{{ title }}</legend>
-			<CheckboxGroupItem 
-				@toggleCheckbox="toggleCheckbox"
-				v-for="item in currentItems"
-				:key="item.id"
-				:item
+	<label :class="['checkbox-group__control', { focused: (id || `${item.id}`) === focusedId }]">
+		<input 
+			@keydown="$emit('handleKeydown', $event, item)"
+			@change="$emit('toggleCheckbox', item)"
+			:aria-checked="item.children && 'mixed'"
+			:indeterminate="item.indeterminate"
+			:aria-controls="controlledId"
+			:checked="item.checked"
+			:tabindex
+			:id
+			ref="inputRef"
+			type="checkbox"
+			class="checkbox-group__control-input"
+		>
+		{{ item.label }}
+	</label>
+	<ul v-if="item.children" class="checkbox-group__list">
+		<li v-for="child in item.children">
+			<CheckboxGroup
+				@toggle-checkbox="$emit('toggleCheckbox', $event)"
+				@handle-keydown="$emit('handleKeydown', $event, child)"
+				@set-input-ref="$emit('setInputRef', $event)"
+				:id="generateChildId(item.id, child.id)"
+				:item="child"
+				:focused-id
+				:tabindex
 			/>
-		</fieldset>
-	</div>
+		</li>
+	</ul>
 </template>
 
 
-<style scoped lang="scss"></style>
+<style scoped lang="scss">
+	@use "@/assets/styles/variables.scss" as *;
+
+	
+	$gap: 10px;
+	$checkboxSize: 18px;
+
+	.checkbox-group__control {
+		align-items: center;
+		display: flex;
+		gap: $gap;
+
+		color: $text;
+		cursor: pointer;
+		font-size: 18px;
+
+		margin-bottom: 15px;
+
+		&.focused,
+		&:hover {
+			color: $accent;
+			font-weight: 500;
+		}
+
+		&.focused {
+			text-decoration: underline;
+		}
+
+		&-input {
+			appearance: none;
+
+			align-items: center;
+			display: flex;
+			justify-content: center;
+
+			background: $text;
+			border-radius: 3px;
+
+			height: $checkboxSize;
+			width: $checkboxSize;
+
+			&::before {
+				background-position: center center;
+				background-repeat: no-repeat;
+				background-size: contain;
+
+				content: "";
+				
+				height: 80%;
+				width: 80%;
+			}
+
+			&:checked,
+			&:indeterminate {
+				background: $accent;
+			}
+
+			&:checked::before {
+				background-image: url('@/assets/icons/check.svg#');
+				margin-top: 2px;
+			}
+
+			&:indeterminate::before {
+				background-image: url('@/assets/icons/dash.svg');
+				width: 70%;
+			}
+		}
+	}
+
+	.checkbox-group__list {
+		display: flex;
+		flex-direction: column;
+		gap: 10px;
+
+		padding-left: calc($gap + $checkboxSize);
+
+		& .checkbox-group__control {
+			margin-bottom: 0px;
+		}
+	}
+</style>
