@@ -5,34 +5,45 @@
 
 <template>
 	<div class="container">
-		<a href="#" class="link">Ссылка</a>
+		<a class="container__link" href="#">Элемент, имеющий фокус</a>
 		<CheckboxDropdown title="Ваши любимые продукты"/>
-		<button class="button">Нажми на меня</button>
+		<button class="container__button">Элемент, имеющий фокус</button>
 	</div>
 </template>
 
 
 <style scoped lang="scss">
+	@use "@/assets/styles/variables.scss" as *;
+
+
 	.container {
 		align-items: flex-start;
 		display: flex;
 		flex-direction: column;
 		padding: 40px 100px;
-	}
 
-	.link {
-		color: #FFFFFF;
+		&__link {
+			color: $text;
+			font-size: 20px;
+			font-weight: 500;
 
-		&:focus {
-			color: red;
+			margin-bottom: 50px;
+	
+			&:focus {
+				color: $accent;
+			}
 		}
-	}
+	
+		&__button {
+			color: $text;
+			font-size: 20px;
+			font-weight: 500;
 
-	.button {
-		color: #FFFFFF;
-
-		&:focus {
-			color: red;
+			margin-top: 50px;
+	
+			&:focus {
+				color: $accent;
+			}
 		}
 	}
 </style>
