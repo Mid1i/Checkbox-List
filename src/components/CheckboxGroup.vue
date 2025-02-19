@@ -1,7 +1,7 @@
 <script setup lang="ts">
 	import { ref, computed, watch } from "vue";
 	import type { TypeItem } from "@/types/Item";
-	import { generateChildId } from "@/helpers/id";
+	import { generateCheckboxId } from "@/helpers/id";
 
 
 	const { item } = defineProps<{ 
@@ -13,13 +13,13 @@
 
 	const emit = defineEmits<{
 		handleKeydown: [event: KeyboardEvent, item: TypeItem];
-		toggleCheckbox: [item: TypeItem];
+		toggleCheckbox: [item: TypeItem, id: string];
 		setInputRef: [el: HTMLElement];
 	}>();
 
 	const inputRef = ref<HTMLElement | null>(null);
 	
-	const controlledId = computed<string | undefined>(() => item.children?.reduce((acc, child) => `${acc} ${generateChildId(item.id, child.id)}`, ''));
+	const controlledId = computed<string | undefined>(() => item.children?.reduce((acc, child) => `${acc} ${generateCheckboxId(item.id, child.id)}`, ''));
 
 
 	watch(inputRef, () => inputRef.value && emit("setInputRef", inputRef.value));
@@ -30,7 +30,7 @@
 	<label :class="['checkbox-group__control', { focused: (id || `${item.id}`) === focusedId }]">
 		<input 
 			@keydown="$emit('handleKeydown', $event, item)"
-			@change="$emit('toggleCheckbox', item)"
+			@change="$emit('toggleCheckbox', item, id)"
 			:aria-checked="item.children && 'mixed'"
 			:indeterminate="item.indeterminate"
 			:aria-controls="controlledId"
@@ -46,10 +46,10 @@
 	<ul v-if="item.children" class="checkbox-group__list">
 		<li v-for="child in item.children">
 			<CheckboxGroup
-				@toggle-checkbox="$emit('toggleCheckbox', $event)"
+				@toggle-checkbox="$emit('toggleCheckbox', $event, generateCheckboxId(item.id, child.id))"
 				@handle-keydown="$emit('handleKeydown', $event, child)"
 				@set-input-ref="$emit('setInputRef', $event)"
-				:id="generateChildId(item.id, child.id)"
+				:id="generateCheckboxId(item.id, child.id)"
 				:item="child"
 				:focused-id
 				:tabindex

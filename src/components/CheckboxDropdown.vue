@@ -2,13 +2,10 @@
 	import { ref, useId, watch } from "vue";
 	import type { TypeItem } from "@/types/Item";
 	import CheckboxGroup from "@/components/CheckboxGroup.vue";
-	import { generateChildId } from "@/helpers/id";
 	import { ITEMS } from "@/constants";
 
 
-	defineProps<{
-		title: string;
-	}>();
+	defineProps<{ title: string }>();
 
 
 	const id = useId();
@@ -24,64 +21,66 @@
 	const toggleDropdown = (): void => {
 		isOpen.value = !isOpen.value;
 
-		focusedId.value = isOpen.value ? inputElements.value[0].id : "";
-		(focusedId.value ? inputElements.value[0] : dropdownToggleButton.value)?.focus();
+		if (isOpen.value) {
+			changeFocus(inputElements.value[0].id);
+			inputElements.value[0]?.focus()
+		} else {
+			changeFocus("");
+			dropdownToggleButton.value?.focus()
+		}
 	};
 
+	const changeFocus = (newFocus: string): void => {
+		focusedId.value = newFocus;
+	};
+	
 	const setInputRef = (el: HTMLElement): void => {
-		if (el) inputElements.value.push(el);
+		if (el && !inputElements.value.includes(el)) inputElements.value.push(el);
 	};
 
 	const isAllChecked = (parent: TypeItem): boolean => !!parent.children?.every(item => item.checked);
 
 	const isSomeChecked = (parent: TypeItem): boolean => !!parent.children?.some(item => item.checked);
 
-	const toggleCheckbox = (item: TypeItem): void => {
+	const toggleCheckbox = (item: TypeItem, id: string): void => {
 		item.checked = !item.checked;
+		
+		if (item.children) item.children.forEach(child => child.checked = item.checked);
 
-		if (item.children) {
-			item.children.forEach(child => child.checked = item.checked);
-			focusedId.value = `checkbox-${item.id}`;
-		} else {
-			const parent = items.value.find(p => p.children?.some(child => child.id === item.id));
-			if (parent) focusedId.value = generateChildId(parent.id, item.id);
-		}
+		updateParentState();
+		changeFocus(id);
 	};
 
-	const updateParentState = (parent: TypeItem): void => {
-		parent.indeterminate = !isAllChecked(parent) && isSomeChecked(parent);
-		parent.checked = isAllChecked(parent);
+	const updateParentState = (): void => {
+		items.value.forEach(parent => {
+			if (parent.children) {
+				parent.checked = isAllChecked(parent);
+				parent.indeterminate = !isAllChecked(parent) && isSomeChecked(parent);
+			}
+		});
 	};
 
+	const keyHandlers: Record<string, (event: KeyboardEvent) => void> = {
+		ArrowDown: event => { event.preventDefault(); moveFocus("down") },
+		ArrowUp: event => { event.preventDefault(); moveFocus("up") },
+		Escape: event => { event.preventDefault(); toggleDropdown() },
+		Tab: toggleDropdown
+	};
+	
 	const moveFocus = (direction: "up" | "down"): void => {
 		const currentIndex = inputElements.value.findIndex(el => el.id === focusedId.value);
 		const newIndex = direction === "down" ? Math.min(currentIndex + 1, inputElements.value.length - 1) : Math.max(currentIndex - 1, 0);
 
-		focusedId.value = inputElements.value[newIndex].id;
+		changeFocus(inputElements.value[newIndex].id);
 		inputElements.value[newIndex]?.focus();
 	};
 
 	const handleKeydown = (event: KeyboardEvent): void => {
-
-		switch(event.key) {
-			case "ArrowDown":
-				event.preventDefault();
-				moveFocus("down");
-				break;
-			case "ArrowUp":
-				event.preventDefault();
-				moveFocus("up");
-				break;
-			case "Escape":
-				event.preventDefault();
-			case "Tab":
-				toggleDropdown();
-				break;
-		}
+		keyHandlers[event.key]?.(event);
 	};
 
 
-	watch(items, () => items.value.forEach(updateParentState), { deep: true });
+	watch(items, updateParentState, { deep: true });
 </script>
 
 
