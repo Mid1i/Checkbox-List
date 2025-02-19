@@ -1,1 +1,1 @@
-export const generateChildId = (parentId: string | number, childId: string | number): string => `checkbox-${parentId}-${childId}`;
+export const generateCheckboxId = (parentId: string | number, childId: string | number): string => `checkbox-${parentId}-${childId}`;
