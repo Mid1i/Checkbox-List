@@ -162,13 +162,13 @@
 				transition: all 0s;
 			}
 
-			&:not(.active, :focus):hover,
-			&:not(.active, :focus):hover .#{$self}-icon {
+			&:not(.active, :focus-visible):hover,
+			&:not(.active, :focus-visible):hover .#{$self}-icon {
 				color: $accent;
 			}
 
 			&.active,
-			&:focus {
+			&:focus-visible {
 				background: $accent;
 			}
 

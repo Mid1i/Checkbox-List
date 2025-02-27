@@ -29,7 +29,7 @@
 
 			margin-bottom: 50px;
 	
-			&:focus {
+			&:focus-visible {
 				color: $accent;
 			}
 		}
@@ -41,7 +41,7 @@
 
 			margin-top: 50px;
 	
-			&:focus {
+			&:focus-visible {
 				color: $accent;
 			}
 		}
